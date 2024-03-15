@@ -79,3 +79,104 @@ class _DictionaryScreenState extends State<DictionaryScreen> {
         date1.month == date2.month &&
         date1.day == date2.day;
   }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'DICTIONARY',
+          textAlign: TextAlign.center,
+          style:
+          TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.blueGrey[900],
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Centered and bold quote
+              Center(
+                child: Text(
+                  'Expand your vocabulary, broaden your mind.',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontStyle: FontStyle.italic,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              SizedBox(height: 20),
+              TextField(
+                controller: _controller,
+                onChanged: (value) {
+                  setState(() {
+                    _word = value;
+                  });
+                },
+                decoration: InputDecoration(
+                  labelText: 'Search Dictionary',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(40),
+                  ),
+                  suffixIcon: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      if (_controller.text.isNotEmpty)
+                        IconButton(
+                          onPressed: () {
+                            setState(() {
+                              _controller.clear();
+                              _word = "";
+                              _showWordOfTheDayButton = true;
+                            });
+                          },
+                          icon: Icon(Icons.close),
+                        ),
+                      SizedBox(width: 5),
+                      ElevatedButton(
+                        onPressed: () {
+                          _searched = true;
+                          _showWordOfTheDayButton = false; // Hide the Word of the Day button
+                          _fetchDefinition(_controller.text);
+                        },
+                        child: Icon(
+                          Icons.search,
+                          size: 30,
+                          color: Colors.white,
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          shape: CircleBorder(),
+                          backgroundColor: Colors.blueGrey[900],
+                          padding: EdgeInsets.all(15),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: 20),
+              if (_showWordOfTheDayButton)
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _showWordOfTheDayButton = false;
+                      _fetchWordOfTheDay();
+                    });
+                  },
+                  child: Text(
+                    'Word of the Day',
+                    style: TextStyle(fontSize: 20, color: Colors.white),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 15),
+                    backgroundColor: Colors.blueGrey[900],
+                  ),
+                ),
+              // Widgets for displaying search results
