@@ -80,6 +80,26 @@ class _DictionaryScreenState extends State<DictionaryScreen> {
         date1.day == date2.day;
   }
 
+  Future<void> _fetchDefinition(String word) async {
+    final response = await http
+        .get(Uri.parse("https://api.dictionaryapi.dev/api/v2/entries/en/$word"));
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      setState(() {
+        _word = word;
+        _searchedWord = word;
+        _definitions = data;
+      });
+    } else {
+      setState(() {
+        _word = word;
+        _searchedWord = word;
+        _definitions = [];
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -179,7 +199,170 @@ class _DictionaryScreenState extends State<DictionaryScreen> {
                     backgroundColor: Colors.blueGrey[900],
                   ),
                 ),
-              // Widgets for displaying search results
+              if (_searched && (_definitions == null || _definitions!.isEmpty))
+                _buildNotFoundMessage(_searchedWord),
+              if (_definitions != null && _definitions!.isNotEmpty)
+                Material(
+                  elevation: 4,
+                  borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    padding: EdgeInsets.all(16.0),
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Colors.grey,
+                        width: 1.0,
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: _definitions!.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final definition = entry.value;
+                        final partOfSpeech =
+                        definition['meanings'][0]['partOfSpeech'];
+                        final occurrences = _definitions!.where((def) =>
+                        def['meanings'][0]['partOfSpeech'] ==
+                            partOfSpeech).toList();
+                        final count = occurrences.length;
+                        final currentIndex =
+                            occurrences.indexOf(definition) + 1;
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Row(
+                                    children: [
+                                      Text(
+                                        '${definition['word']}',
+                                        style: TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                      SizedBox(width: 5),
+                                      Text(
+                                        '$partOfSpeech${count > 1 ? ' ($currentIndex)' : ''}',
+                                        style: TextStyle(
+                                            fontSize: 16,
+                                            color: Colors.blue),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(width: 😎,
+                                GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      _isBookmarked = !_isBookmarked;
+                                      _starColor = _isBookmarked
+                                          ? Colors.yellow
+                                          : Colors.grey;
+                                    });
+                                  },
+                                  child: Icon(Icons.star,
+                                      color: _isBookmarked
+                                          ? Colors.yellow
+                                          : Colors.grey),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 5),
+                            Row(
+                              children: [
+                                Text(
+                                  '${definition['phonetics'][0]['text']}',
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                                SizedBox(width: 5),
+                                if (definition['phonetics'][0]['audio'] !=
+                                    null)
+                                  IconButton(
+                                    onPressed: () {
+                                      _speak(definition['word']);
+                                    },
+                                    icon: Icon(Icons.volume_up),
+                                  ),
+                              ],
+                            ),
+                            SizedBox(height: 5),
+                            Text(
+                              '${definition['meanings'][0]['definitions'][0]['definition']}',
+                              style: TextStyle(fontSize: 16),
+                            ),
+                            if (definition['meanings'][0]['definitions'][0]
+                            ['synonyms'] !=
+                                null &&
+                                (definition['meanings'][0]['definitions'][0]
+                                ['synonyms'] as List)
+                                    .isNotEmpty) ...[
+                              SizedBox(height: 5),
+                              Text(
+                                'Synonyms: ${definition['meanings'][0]['definitions'][0]['synonyms'].join(", ")}',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                            ],
+                            if (definition['meanings'][0]['definitions'][0]
+                            ['example'] !=
+                                null) ...[
+                              SizedBox(height: 5),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (definition['meanings'][0]['definitions']
+                                  [0]['example'] is List)
+                                    ...List.generate(
+                                      (definition['meanings'][0]['definitions']
+                                      [0]['example']
+                                      as List)
+                                          .length,
+                                          (exampleIndex) {
+                                        final exampleSentences =
+                                        (definition['meanings'][0]
+                                        ['definitions'][0]
+                                        ['example'][exampleIndex]
+                                        as String)
+                                            .split('. ');
+                                        return Column(
+                                          crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                          children: [
+                                            for (var i = 0;
+                                            i < exampleSentences.length;
+                                            i++)
+                                              Text(
+                                                '${i == 0 ? 'Example ${exampleIndex + 1}' : ''}${i == 0 ? ':' : ''} ${exampleSentences[i]}',
+                                                style: TextStyle(fontSize: 16),
+                                              ),
+                                          ],
+                                        );
+                                      },
+                                    ),
+                                  if (definition['meanings'][0]['definitions']
+                                  [0]['example'] is String)
+                                    Text(
+                                      'Example: ${definition['meanings'][0]['definitions'][0]['example']}',
+                                      style: TextStyle(fontSize: 16),
+                                    ),
+                                ],
+                              ),
+                            ],
+                            SizedBox(height: 20),
+                          ],
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildNotFoundMessage(String searchedWord) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 20),
