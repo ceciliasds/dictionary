@@ -180,3 +180,59 @@ class _DictionaryScreenState extends State<DictionaryScreen> {
                   ),
                 ),
               // Widgets for displaying search results
+  Widget _buildNotFoundMessage(String searchedWord) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 20),
+      child: Material(
+        elevation: 4,
+        shadowColor: Colors.red,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: EdgeInsets.all(16.0),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: Colors.red,
+              width: 1.0,
+            ),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Column(
+            children: [
+              Text(
+                ' "$searchedWord" is not in our Dictionary. Try another word. ',
+                style: TextStyle(fontSize: 18),
+              ),
+              SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    _searched = false;
+                  });
+                  _controller.clear(); // Clear the search bar
+                },
+                child: Text('OK'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+
+  Future<void> _speak(String text) async {
+    await flutterTts.setLanguage("en-US");
+    await flutterTts.setPitch(1.0);
+    await flutterTts.speak(text);
+  }
+}
+
+void main() {
+  runApp(MaterialApp(
+    home: DictionaryScreen(),
+    theme: ThemeData(
+      primaryColor: Colors.blueGrey[900],
+    ),
+    debugShowCheckedModeBanner: false,
+  ));
+}
