@@ -252,7 +252,7 @@ class _DictionaryScreenState extends State<DictionaryScreen> {
                                     ],
                                   ),
                                 ),
-                                SizedBox(width: 😎,
+                                SizedBox(width: 8),
                                 GestureDetector(
                                   onTap: () {
                                     setState(() {
